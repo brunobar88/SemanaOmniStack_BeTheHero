@@ -3,14 +3,17 @@
 module.exports = {
 
   development: {
-    client: 'sqlite3',
+    client: 'mysql',
+    version: '5.7',
     connection: {
-      filename: './src/database/db.sqlite'
+      host : '127.0.0.1',
+      user : 'root',
+      password : '',
+      database : 'BeTheHero'
     },
     migrations: {
       directory: './src/database/migrations'
-    },
-    useNullAsDefault: true,
+    }
   },
 
   test: {

@@ -1,56 +1,23 @@
 const express = require('express');
-const { celebrate, Segments, Joi } = require('celebrate');
 const OngController = require('./controllers/OngController');
 const IncidentsController = require('./controllers/IncidentController');
 const ProfileController = require('./controllers/ProfileController');
 const SessionController = require('./controllers/SessionController');
 const routes = express.Router();
 
-routes.post('/sessions',celebrate({
-    [Segments.BODY]: Joi.object().keys({
-        id: Joi.string().required()
-    })
-}), SessionController.create)
+const OngMiddleware = require('./middleware/OngMiddleware');
+const IncidentsMiddleware = require('./middleware/IncidentsMiddleware');
+
+
+routes.post('/sessions', OngMiddleware.validateSession(), SessionController.create);
 
 routes.get('/ongs', OngController.listAll);
+routes.post('/ongs', OngMiddleware.validaDataOngs(), OngController.create);
 
-routes.post('/ongs', celebrate({
-    [Segments.BODY]: Joi.object().keys({
-        name: Joi.string().required(),
-        email: Joi.string().required().email(),
-        whatsapp: Joi.string().required().min(10).max(11),
-        city: Joi.string().required(),
-        uf: Joi.string().required().length(2),
-    })
-}), OngController.create);
+routes.get('/profile', OngMiddleware.validaDadosProfile(), ProfileController.index);
 
-routes.get('/profile', celebrate({
-    [Segments.HEADERS]: Joi.object({
-        authorization: Joi.string().required()
-    }).unknown(),
-}), ProfileController.index);
-
-routes.get('/incidents', celebrate({
-    [Segments.QUERY]: Joi.object().keys({
-        page: Joi.number(),
-    })
-}), IncidentsController.index);
-
-routes.post('/incidents', celebrate({
-    [Segments.HEADERS]: Joi.object({
-        authorization: Joi.string().required()
-    }).unknown(),
-    [Segments.BODY]: Joi.object().keys({
-        title: Joi.string().required(),
-        description: Joi.string().max(250).required(),
-        value: Joi.number().required(),
-    })
-}), IncidentsController.create);
-
-routes.delete('/incidents/:id', celebrate({
-    [Segments.PARAMS]: Joi.object().keys({
-        id: Joi.number().required()
-    })
-}), IncidentsController.delete);
+routes.get('/incidents', IncidentsMiddleware.validaNumberPaginacao(), IncidentsController.index);
+routes.post('/incidents', IncidentsMiddleware.validateDataIncidents(), IncidentsController.create);
+routes.delete('/incidents/:id', IncidentsMiddleware.validateDeleteIncidents(), IncidentsController.delete);
 
 module.exports = routes;
